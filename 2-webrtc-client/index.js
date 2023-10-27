@@ -1,4 +1,5 @@
 const PORT = 3001
+const ip = '10.251.42.48';
 
 let myInfo = {}
 
@@ -15,12 +16,14 @@ initClickEvent()
 function initClickEvent() {
   document.getElementById('submit-btn').addEventListener('click', function () {
     const roomId = document.querySelector('#room').value
+    
     const userName = document.querySelector('#user-name').value
     if (!roomId || !userName) {
-      alert('房间ID或姓名不能为空')
+      alert('房間ID或姓名不能為空')
       return
     }
     myInfo = { roomId, userName, socketId }
+    console.log(`myInfo`,myInfo);
     joinRoom(myInfo)
   })
 
@@ -33,8 +36,7 @@ function initClickEvent() {
 
 // 初始化socket事件
 function initSocket() {
-  socket = io(`http://localhost:${PORT}`)
-
+  socket = io(`http://${ip}:${PORT}`)
   socket.on('connected', onConnected)
   socket.on('room_created', onCreateRoom)
   socket.on('room_joined', onJoinRoomSuccess)
@@ -46,44 +48,45 @@ function initSocket() {
   socket.on('add_candidate', onAddCandidate)
 }
 
-// 连接 WebSocket 成功
+// 連接 WebSocket 成功
 function onConnected(id) {
   socketId = id
+  console.log(`連接成功，socketId為${socketId}`)
 }
 
-// 创建并加入空房间
+// 建立並加入空房間
 function onCreateRoom() {
-  alert(`你已创建并加入【${myInfo.roomId}】房间`)
+  alert(`你已建立並加入【${myInfo.roomId}】房間`)
   showChatContainer()
 }
 
-// 加入房间成功
+// 加入房間成功
 function onJoinRoomSuccess(existUser) {
   showChatContainer()
   const { userName, roomId, socketId } = existUser
 
-  // 当前用户加入房间可不提示
+  // 目前使用者加入房間可不提示
   if (socketId !== myInfo.socketId) {
-    console.log(`用户${userName}已加入【${roomId}】房间`)
+    console.log(`使用者${userName}已加入【${roomId}】房間`)
   }
 }
 
-// 房间已满
+// 房間已滿
 function onJoinRoomFail() {
-  alert('房间已满，请更换房间号ID')
+  alert('房間已滿，請更換房間號碼ID')
 }
 
-// 收到视频通话申请
+// 收到視訊通話申請
 function onReceiveVideo(userInfo) {
   if (myInfo.socketId === userInfo.socketId) return
 
-  if (window.confirm(`你要接收该用户${userInfo.userName}的视频通话邀请吗？`)) {
+  if (window.confirm(`你要接收該用戶${userInfo.userName}的視訊通話邀請嗎？`)) {
     acceptVideoCall()
   } else {
   }
 }
 
-// 用户接听视频
+// 用戶接聽視頻
 async function onAcceptVideo(userInfo) {
   document.getElementById('chat-btn').setAttribute('disabled', true)
   await createLocalMediaStream()
@@ -93,7 +96,7 @@ async function onAcceptVideo(userInfo) {
   }
 }
 
-// 收到 offer 信令后应答
+// 收到 offer 信令後應答
 async function onReceiveOffer(offer) {
   if (!pc) return
   await pc.setRemoteDescription(offer)
@@ -102,7 +105,7 @@ async function onReceiveOffer(offer) {
   socket.emit('answer', { answer, userInfo: myInfo })
 }
 
-// 收到 answer 信令后
+// 收到 answer 信令後
 async function onReceiveAnswer(answer) {
   await pc.setRemoteDescription(answer)
 }
@@ -111,22 +114,22 @@ async function onAddCandidate(candidate) {
   await pc.addIceCandidate(candidate)
 }
 
-// 加入房间
+// 加入房間
 function joinRoom(message) {
   socket.emit('create_or_join_room', message)
 }
 
-// 发起视频通话
+// 發起視訊通話
 function requestVideoCall() {
   socket.emit('request_video', myInfo)
 }
 
-// 用户接听视频
+// 用戶接聽視頻
 function acceptVideoCall() {
   socket.emit('accept_video', myInfo)
 }
 
-// 创建本地媒体流
+// 建立本地媒體串流
 async function createLocalMediaStream() {
   localStream = await navigator.mediaDevices.getUserMedia({
     video: true,
@@ -135,7 +138,7 @@ async function createLocalMediaStream() {
   document.getElementById('local-video').srcObject = localStream
 }
 
-// 建立点对点连接
+// 建立點對點連接
 function createPeerConnection() {
   if (!pc) {
     pc = new RTCPeerConnection()
@@ -171,7 +174,7 @@ function onicegatheringstatechange() {
   console.log(`onicegatheringstatechange, pc.iceGatheringState is ${pc.iceGatheringState}.`)
 }
 
-// 发送方创建 offer
+// 發送方創建 offer
 async function sendOffer() {
   const offer = await pc.createOffer()
   await pc.setLocalDescription(offer)
@@ -182,3 +185,6 @@ function showChatContainer() {
   document.getElementById('form').style.display = 'none'
   document.getElementById('chat-container').style.display = 'block'
 }
+
+
+//聊天
